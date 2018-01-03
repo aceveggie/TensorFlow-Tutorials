@@ -33,19 +33,19 @@ p_keep_input = tf.placeholder("float")
 p_keep_hidden = tf.placeholder("float")
 py_x = model(X, w_h, w_h2, w_o, p_keep_input, p_keep_hidden)
 
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(py_x, Y))
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y))
 train_op = tf.train.RMSPropOptimizer(0.001, 0.9).minimize(cost)
 predict_op = tf.argmax(py_x, 1)
 
 sess = tf.Session()
-init = tf.initialize_all_variables()
+init = tf.global_variables_initializer()
 sess.run(init)
 
-for i in range(100):
+for i in range(10):
     for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
         sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end],
                                       p_keep_input: 0.8, p_keep_hidden: 0.5})
-    print i, np.mean(np.argmax(teY, axis=1) ==
-                     sess.run(predict_op, feed_dict={X: teX, Y: teY,
-                                                     p_keep_input: 1.0,
-                                                     p_keep_hidden: 1.0}))
+    print (i, np.mean(np.argmax(teY, axis=1) ==
+                         sess.run(predict_op, feed_dict={X: teX, Y: teY,
+                                                         p_keep_input: 1.0,
+                                                         p_keep_hidden: 1.0})))
