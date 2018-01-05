@@ -52,12 +52,14 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, label
 train_op = tf.train.RMSPropOptimizer(0.001, 0.9).minimize(cost)
 predict_op = tf.argmax(py_x, 1)
 
+tf.summary.scalar('cost value', cost)
+
 sess = tf.Session()
 # init = tf.initialize_all_variables()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-for i in range(10):
+for i in range(1000):
     for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
         sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end],
                                       p_keep_conv: 0.8, p_keep_hidden: 0.5})
