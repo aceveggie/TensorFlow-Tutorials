@@ -86,7 +86,7 @@ def model(X, w, w2, w3, w4, w_o, p_keep_conv, p_keep_hidden):
     pyx = tf.matmul(l4, w_o)
     return pyx
 
-dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["C:\\Users\\jason\\Desktop\\TensorFlow-Tutorials\\cifar-10-batches-py\\data_batch_1", "C:\\Users\\jason\\Desktop\\TensorFlow-Tutorials\\cifar-10-batches-py\\data_batch_2"])
+dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["..\\data\\cifar-10-batches-py\\data_batch_1", "..\\data\\cifar-10-batches-py\\data_batch_2"])
 
 print(dataTrainArray.mean(), dataTrainArray.std(), dataTestArray.mean(), dataTestArray.std())
 
@@ -136,34 +136,39 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-print ('loading stored weights')
-saver.restore(sess, '.\\my-model-cifar10.meta')
+for i in range(60):
 
-imgList = []
-labelList = []
-batchID = 0
-accuracyList = []
-for eachIteration in range(dataTrainArray.shape[0]):
-    imgList.append(dataTrainArray[eachIteration,:,:,:])
-    labelList.append(labelTrainArray[eachIteration,:])
+    imgList = []
+    labelList = []
+    batchID = 0
+    for eachIteration in range(dataTrainArray.shape[0]):
 
-    if(len(imgList) == 16):
-        imgList = np.array(imgList)
-        imgList = (imgList - 120)/64.0
-        labelList = np.array(labelList)
-        
-        outputY = sess.run(predict_op, feed_dict={X: imgList, Y: labelList,
-                                  p_keep_conv: 1, p_keep_hidden: 1.0})
-        
-        labelList = np.argmax(labelList, axis= 1)
-        
-        curAccuracy = 100.0 * np.mean(outputY == labelList)
-        accuracyList.append(curAccuracy)
-        print ('batchID:', batchID, 'accuracy: ', curAccuracy)
+        imgList.append(dataTrainArray[eachIteration,:,:,:])
+        labelList.append(labelTrainArray[eachIteration,:])
 
-        imgList = []
-        labelList = []
-        batchID += 1
-        continue
+        if(len(imgList) == 16):
+            imgList = np.array(imgList)
+            imgList = (imgList - 120)/64.0
+            labelList = np.array(labelList)
+            
+            sess.run(train_op, feed_dict={X: imgList, Y: labelList,
+                                      p_keep_conv: 0.8, p_keep_hidden: 0.5})
 
-print('final accuracy: ', float(sum(accuracyList))/len(accuracyList))
+            
+            outputY = sess.run(predict_op, feed_dict={X: imgList, Y: labelList,
+                                      p_keep_conv: 1, p_keep_hidden: 1.0})
+            curCost = sess.run(cost, feed_dict={X: imgList, Y: labelList,
+                                      p_keep_conv: 1, p_keep_hidden: 1.0})
+
+            
+            if(batchID % 160 == 0):
+                print('inputs:', imgList.shape, labelList.shape)
+                labelList = np.argmax(labelList, axis= 1)
+                print ('epoch: ', i, 'batchID:', batchID, 'curCost: ',curCost, 'accuracy: ', 100.0 * np.mean(outputY == labelList))
+
+            imgList = []
+            labelList = []
+            batchID += 1
+            continue
+
+saver.save(sess, '.\\my-model-cifar10.meta')
