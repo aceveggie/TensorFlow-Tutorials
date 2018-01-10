@@ -149,7 +149,8 @@ for eachIteration in range(dataTrainArray.shape[0]):
 
     if(len(imgList) == 16):
         imgList = np.array(imgList)
-        imgList = (imgList - 120)/64.0
+        # perform feature scaling
+        imgList = (imgList - 120)/64.0 # obtained from training dataset
         labelList = np.array(labelList)
         
         outputY = sess.run(predict_op, feed_dict={X: imgList, Y: labelList,

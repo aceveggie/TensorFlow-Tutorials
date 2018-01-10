@@ -12,7 +12,7 @@ def model(X, w_h, w_o):
     return tf.matmul(h, w_o) # note that we dont take the softmax at the end because our cost fn does that for us
 
 
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
 trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
 
 X = tf.placeholder("float", [None, 784])

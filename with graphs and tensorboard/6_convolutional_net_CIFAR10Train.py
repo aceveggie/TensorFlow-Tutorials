@@ -60,10 +60,8 @@ def readCIFAR10(fileList):
     print(dataTrainArray.shape, labelTrainArray.shape, dataTestArray.shape, labelTestArray.shape)
     return dataTrainArray, labelTrainArray, dataTestArray, labelTestArray
 
-def init_weights(shape, layerName):
-    with tf.variable_scope(layerName):
-        weights = tf.Variable(tf.random_normal(shape, stddev=0.01))
-    return weights
+def init_weights(shape):
+    return tf.Variable(tf.random_normal(shape, stddev=0.01))
 
 def model(X, w, w2, w3, w4, w_o, p_keep_conv, p_keep_hidden):
     l1a = tf.nn.relu(tf.nn.conv2d(X, w, [1, 1, 1, 1], 'SAME'))
@@ -92,14 +90,34 @@ dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10([".
 
 print(dataTrainArray.mean(), dataTrainArray.std(), dataTestArray.mean(), dataTestArray.std())
 
+# for i in range(5):
+#     newIdx = random.randint(1,10000)
+#     img = dataTrainArray[newIdx, :, :, :]
+#     label = labelTrainArray[newIdx,:]
+#     print(label)
+#     print(img.shape, img.max(), img.min(), img.std())
+#     cv2.imwrite("img.jpg", img)
+#     cv2.imshow("img", img)
+#     cv2.waitKey(0)
+
+# for i in range(5):
+#     newIdx = random.randint(1,10000)
+#     img = dataTestArray[newIdx, :, :, :]
+#     label = labelTestArray[newIdx,:]
+#     print(label)
+#     print(img.shape, img.max(), img.min(), img.std())
+#     cv2.imwrite("img.jpg", img)
+#     cv2.imshow("img", img)
+#     cv2.waitKey(0)
+
 X = tf.placeholder("float", [None, 32, 32, 3])
 Y = tf.placeholder("float", [None, 10])
 
-w = init_weights([3, 3, 3, 32], layerName= 'conv1') # int((32 - 3 + 1)/2) = 15 x 15 x 32
-w2 = init_weights([5, 5, 32, 64], layerName= 'conv2') # int((15 - 5 + 1)/2) = 5 x 5 x 64
-w3 = init_weights([5, 5, 64, 128], layerName= 'conv3') # int((5 - 5 + 1)/2) = 5 x 5 x 64
-w4 = init_weights([128 * 4 * 4 , 625], layerName= 'fully1')
-w_o = init_weights([625, 10], layerName= 'fully2')
+w = init_weights([3, 3, 3, 32]) # int((32 - 3 + 1)/2) = 15 x 15 x 32
+w2 = init_weights([5, 5, 32, 64]) # int((15 - 5 + 1)/2) = 5 x 5 x 64
+w3 = init_weights([5, 5, 64, 128]) # int((5 - 5 + 1)/2) = 5 x 5 x 64
+w4 = init_weights([128 * 4 * 4 , 625])
+w_o = init_weights([625, 10])
 
 p_keep_conv = tf.placeholder("float")
 p_keep_hidden = tf.placeholder("float")
@@ -114,6 +132,7 @@ tf.summary.scalar('cost value', cost)
 saver = tf.train.Saver()
 
 sess = tf.Session()
+# init = tf.initialize_all_variables()
 init = tf.global_variables_initializer()
 sess.run(init)
 

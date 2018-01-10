@@ -148,7 +148,8 @@ for i in range(60):
 
         if(len(imgList) == 16):
             imgList = np.array(imgList)
-            imgList = (imgList - 120)/64.0
+            # perform feature scaling
+            imgList = (imgList - 120)/64.0 # this was roughly mean and std of the cifar dataset
             labelList = np.array(labelList)
             
             sess.run(train_op, feed_dict={X: imgList, Y: labelList,

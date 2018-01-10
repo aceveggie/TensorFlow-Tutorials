@@ -19,7 +19,7 @@ def model(X, w_h, w_h2, w_o, p_drop_input, p_drop_hidden): # this network is the
     return tf.matmul(h2, w_o)
 
 
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
 trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
 
 X = tf.placeholder("float", [None, 784])
