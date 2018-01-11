@@ -1,2 +1,2 @@
-model_checkpoint_path: "my-model-cifar10.meta"
-all_model_checkpoint_paths: "my-model-cifar10.meta"
+model_checkpoint_path: "my-model-cifar10-batchNormalized.meta"
+all_model_checkpoint_paths: "my-model-cifar10-batchNormalized.meta"
