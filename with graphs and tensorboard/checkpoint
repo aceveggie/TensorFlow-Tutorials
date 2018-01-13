@@ -1,2 +1,6 @@
-model_checkpoint_path: "my-model-cifar10-batchNormalized.meta"
-all_model_checkpoint_paths: "my-model-cifar10-batchNormalized.meta"
+model_checkpoint_path: "my-model-cifar10-batchNormalized27"
+all_model_checkpoint_paths: "my-model-cifar10-batchNormalized23"
+all_model_checkpoint_paths: "my-model-cifar10-batchNormalized24"
+all_model_checkpoint_paths: "my-model-cifar10-batchNormalized25"
+all_model_checkpoint_paths: "my-model-cifar10-batchNormalized26"
+all_model_checkpoint_paths: "my-model-cifar10-batchNormalized27"
