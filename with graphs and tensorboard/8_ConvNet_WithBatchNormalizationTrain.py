@@ -4,6 +4,7 @@ import pickle
 import random
 import cv2
 
+
 def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
@@ -117,9 +118,10 @@ print(dataTrainArray.mean(), dataTrainArray.std(), dataTestArray.mean(), dataTes
 #     cv2.imshow("img", img)
 #     cv2.waitKey(0)
 
-with tf.name_scope("Inputs") as scope:
-    X = tf.placeholder("float", [None, 32, 32, 3], name='X')
-    Y = tf.placeholder("float", [None, 10], name='Y')
+g = tf.Graph()
+
+X = tf.placeholder("float", [None, 32, 32, 3], name='X')
+Y = tf.placeholder("float", [None, 10], name='Y')
 
 # with tf.name_scope('inputReshaped') as scope:
 #     XReshaped = tf.reshape(X, [-1, 32, 32, 3])
@@ -148,33 +150,31 @@ p_keep_hidden = tf.placeholder("float")
 
 py_x = model(X, weights, biases, p_keep_conv, p_keep_hidden)
 
-with tf.name_scope("costFunc") as scope:
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y))
-    tf.summary.scalar("costFunc", cost)
-
+calculatedError = tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)
+cost = tf.reduce_mean(calculatedError)
+tf.summary.scalar("costFunc", cost)
 
 #train_op = tf.train.RMSPropOptimizer(0.001, 0.9).minimize(cost)
 train_op = tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-08, use_locking=False, name='Adam').minimize(cost)
 predict_op = tf.argmax(py_x, 1)
 
-with tf.name_scope('Accuracy'):
-    with tf.name_scope('CorrectPrediction'):
-        correct_prediction = tf.equal(tf.cast(py_x, dtype=tf.float32), Y)
-    with tf.name_scope('Accuracy'):
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-tf.summary.scalar('Accuracy', accuracy)
+# with tf.name_scope('Accuracy'):
+#     with tf.name_scope('CorrectPrediction'):
+#         correct_prediction = tf.equal(tf.cast(py_x, dtype=tf.float32), Y)
+#     with tf.name_scope('Accuracy'):
+#         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+# tf.summary.scalar('Accuracy', accuracy)
 
 saver = tf.train.Saver()
 sess = tf.Session()
 
 merged = tf.summary.merge_all()
-train_writer = tf.summary.FileWriter('./logs/', sess.graph)
-
+train_writer = tf.summary.FileWriter('./logs/', g)
 
 # init = tf.initialize_all_variables()
 init = tf.global_variables_initializer()
 sess.run(init)
-saver.restore(sess,"my-model-cifar10-batchNormalized.meta")
+#saver.restore(sess,"my-model-cifar10-batchNormalized.meta")
 for i in range(60):
 
     imgList = []
@@ -206,7 +206,7 @@ for i in range(60):
 
             run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             run_metadata = tf.RunMetadata()
-            summary, acc = sess.run([merged, accuracy], feed_dict={ X: imgList, Y: labelList, p_keep_conv: 0.8, p_keep_hidden: 0.5}, options=run_options, run_metadata=run_metadata)
+            summary, = sess.run([merged] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 0.8, p_keep_hidden: 0.5}, options=run_options, run_metadata=run_metadata)
 
             train_writer.add_summary(summary, batchID)
             if(batchID % 160 == 0):
