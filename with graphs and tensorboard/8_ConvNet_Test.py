@@ -93,8 +93,8 @@ def init_weights(shape, name, type='conv'):
 
 def model(X, weights, biases, p_keep_conv, p_keep_hidden):
 
-    conv1, conv2, conv3, w4, w_o = weights
-    b1, b2, b3, b4, b_o = biases
+    conv1, conv2, conv3, conv4, w5, w_o = weights
+    b1, b2, b3, b4, b5, b_o = biases
    
     l1a = tf.nn.relu(tf.layers.batch_normalization(tf.nn.conv2d(X, conv1, [1, 1, 1, 1], 'SAME') + b1))
     l1 = tf.nn.max_pool(l1a, ksize=[1, 2, 2, 1],
@@ -107,17 +107,23 @@ def model(X, weights, biases, p_keep_conv, p_keep_hidden):
     l2 = tf.nn.dropout(l2, p_keep_conv)
 
     l3a = tf.nn.relu(tf.layers.batch_normalization(tf.nn.conv2d(l2, conv3, [1, 1, 1, 1], 'SAME') + b3))
-    l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1],
+    l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1], 
                         strides=[1, 2, 2, 1], padding='SAME')
-    #l3 = tf.reshape(l3, [-1, w4.get_shape().as_list()[0]])
-    l3 = tf.contrib.layers.flatten(l3)
     l3 = tf.nn.dropout(l3, p_keep_conv)
 
-    l4 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(l3, w4) + b4))
-    l4 = tf.nn.dropout(l4, p_keep_hidden)
+    l4a = tf.nn.relu(tf.layers.batch_normalization(tf.nn.conv2d(l3, conv4, [1, 1, 1, 1], 'SAME') + b4))
+    l4 = tf.nn.max_pool(l4a, ksize=[1, 2, 2, 1],
+                        strides=[1, 2, 2, 1], padding='SAME')
+    #l3 = tf.reshape(l3, [-1, w4.get_shape().as_list()[0]])
+    l4 = tf.contrib.layers.flatten(l4)
+    l4 = tf.nn.dropout(l4, p_keep_conv)
 
-    pyx = tf.matmul(l4, w_o) + b_o
+    l5 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(l4, w5) + b5))
+    l5 = tf.nn.dropout(l5, p_keep_hidden)
+
+    pyx = tf.matmul(l5, w_o) + b_o
     return pyx
+
 
 dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["..\\data\\cifar-10-batches-py\\data_batch_1", "..\\data\\cifar-10-batches-py\\data_batch_2"])
 
@@ -170,31 +176,39 @@ with tf.name_scope('b2'):
     variable_summaries(b2)
 
 with tf.name_scope('conv3'):
-    conv3 = init_weights([5, 5, 64, 128], 'conv3', type='conv') # 4 x 4 x 128 o/p # flatten this
+    conv3 = init_weights([5, 5, 64, 64], 'conv3', type='conv') # 4 x 4 x 64 o/p
     variable_summaries(conv3)
 
 with tf.name_scope('b3'):
     b3 = init_weights([1, 1, 1, conv3.get_shape().as_list()[3]], 'b3', type='b')
     variable_summaries(b3)
 
-with tf.name_scope('w4'):
-    w4 = init_weights([128 * 4 * 4 , 625], name='w4', type='fc') # 625 o/p
-    variable_summaries(w4)
+with tf.name_scope('conv4'):
+    conv4 = init_weights([5, 5, 64, 64], 'conv4', type='conv') # 2 x 2 x 64 o/p
+    variable_summaries(conv4)
 
 with tf.name_scope('b4'):
-    b4 = init_weights([1, w4.get_shape().as_list()[1]], name='b4', type='b')
+    b4 = init_weights([1, 1, 1, conv4.get_shape().as_list()[3]], name='b4', type='b')
     variable_summaries(b4)
 
+with tf.name_scope('w5'):
+    w5 = init_weights([2 * 2 * 64, 128], 'w5', type='fc') # 128 o/p
+    variable_summaries(w5)
+
+with tf.name_scope('b5'):
+    b5 = init_weights([1, w5.get_shape().as_list()[1]], 'b5', type='b')
+    variable_summaries(b5)
+
 with tf.name_scope('w_o'):
-    w_o = init_weights([625, 10], name='w_o', type='fc') # 10 o/p
+    w_o = init_weights([128, 10], name='w_o', type='fc') # 10 o/p
     variable_summaries(w_o)
 
 with tf.name_scope('b_o'):
     b_o = init_weights([1, w_o.get_shape().as_list()[1]], name='b_o', type='b')
     variable_summaries(b_o)
 
-weights = [conv1, conv2, conv3, w4, w_o]
-biases = [b1, b2, b3, b4, b_o]
+weights = [conv1, conv2, conv3, conv4, w5, w_o]
+biases = [b1, b2, b3, b4, b5, b_o]
 
 p_keep_conv = tf.placeholder("float")
 p_keep_hidden = tf.placeholder("float")
@@ -231,8 +245,7 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-saver.restore(sess,"my-model-cifar10-batchNormalized"+str(27))
-
+saver.restore(sess,"my-model-cifar10-batchNormalized"+str(99))
 
 imgList = []
 labelList = []

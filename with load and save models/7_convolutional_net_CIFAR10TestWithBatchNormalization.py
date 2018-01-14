@@ -147,9 +147,9 @@ imgList = []
 labelList = []
 batchID = 0
 accuracyList = []
-for eachIteration in range(dataTrainArray.shape[0]):
-    imgList.append(dataTrainArray[eachIteration,:,:,:])
-    labelList.append(labelTrainArray[eachIteration,:])
+for eachIteration in range(dataTestArray.shape[0]):
+    imgList.append(dataTestArray[eachIteration,:,:,:])
+    labelList.append(labelTestArray[eachIteration,:])
 
     if(len(imgList) == 16):
         imgList = np.array(imgList)

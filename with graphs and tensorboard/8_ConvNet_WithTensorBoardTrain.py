@@ -93,8 +93,8 @@ def init_weights(shape, name, type='conv'):
 
 def model(X, weights, biases, p_keep_conv, p_keep_hidden):
 
-    conv1, conv2, conv3, w4, w_o = weights
-    b1, b2, b3, b4, b_o = biases
+    conv1, conv2, conv3, conv4, w5, w_o = weights
+    b1, b2, b3, b4, b5, b_o = biases
    
     l1a = tf.nn.relu(tf.layers.batch_normalization(tf.nn.conv2d(X, conv1, [1, 1, 1, 1], 'SAME') + b1))
     l1 = tf.nn.max_pool(l1a, ksize=[1, 2, 2, 1],
@@ -107,16 +107,21 @@ def model(X, weights, biases, p_keep_conv, p_keep_hidden):
     l2 = tf.nn.dropout(l2, p_keep_conv)
 
     l3a = tf.nn.relu(tf.layers.batch_normalization(tf.nn.conv2d(l2, conv3, [1, 1, 1, 1], 'SAME') + b3))
-    l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1],
+    l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1], 
                         strides=[1, 2, 2, 1], padding='SAME')
-    #l3 = tf.reshape(l3, [-1, w4.get_shape().as_list()[0]])
-    l3 = tf.contrib.layers.flatten(l3)
     l3 = tf.nn.dropout(l3, p_keep_conv)
 
-    l4 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(l3, w4) + b4))
-    l4 = tf.nn.dropout(l4, p_keep_hidden)
+    l4a = tf.nn.relu(tf.layers.batch_normalization(tf.nn.conv2d(l3, conv4, [1, 1, 1, 1], 'SAME') + b4))
+    l4 = tf.nn.max_pool(l4a, ksize=[1, 2, 2, 1],
+                        strides=[1, 2, 2, 1], padding='SAME')
+    #l3 = tf.reshape(l3, [-1, w4.get_shape().as_list()[0]])
+    l4 = tf.contrib.layers.flatten(l4)
+    l4 = tf.nn.dropout(l4, p_keep_conv)
 
-    pyx = tf.matmul(l4, w_o) + b_o
+    l5 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(l4, w5) + b5))
+    l5 = tf.nn.dropout(l5, p_keep_hidden)
+
+    pyx = tf.matmul(l5, w_o) + b_o
     return pyx
 
 dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["..\\data\\cifar-10-batches-py\\data_batch_1", "..\\data\\cifar-10-batches-py\\data_batch_2"])
@@ -170,31 +175,39 @@ with tf.name_scope('b2'):
     variable_summaries(b2)
 
 with tf.name_scope('conv3'):
-    conv3 = init_weights([5, 5, 64, 128], 'conv3', type='conv') # 4 x 4 x 128 o/p # flatten this
+    conv3 = init_weights([5, 5, 64, 64], 'conv3', type='conv') # 4 x 4 x 64 o/p
     variable_summaries(conv3)
 
 with tf.name_scope('b3'):
     b3 = init_weights([1, 1, 1, conv3.get_shape().as_list()[3]], 'b3', type='b')
     variable_summaries(b3)
 
-with tf.name_scope('w4'):
-    w4 = init_weights([128 * 4 * 4 , 625], name='w4', type='fc') # 625 o/p
-    variable_summaries(w4)
+with tf.name_scope('conv4'):
+    conv4 = init_weights([5, 5, 64, 64], 'conv4', type='conv') # 2 x 2 x 64 o/p
+    variable_summaries(conv4)
 
 with tf.name_scope('b4'):
-    b4 = init_weights([1, w4.get_shape().as_list()[1]], name='b4', type='b')
+    b4 = init_weights([1, 1, 1, conv4.get_shape().as_list()[3]], name='b4', type='b')
     variable_summaries(b4)
 
+with tf.name_scope('w5'):
+    w5 = init_weights([2 * 2 * 64, 128], 'w5', type='fc') # 128 o/p
+    variable_summaries(w5)
+
+with tf.name_scope('b5'):
+    b5 = init_weights([1, w5.get_shape().as_list()[1]], 'b5', type='b')
+    variable_summaries(b5)
+
 with tf.name_scope('w_o'):
-    w_o = init_weights([625, 10], name='w_o', type='fc') # 10 o/p
+    w_o = init_weights([128, 10], name='w_o', type='fc') # 10 o/p
     variable_summaries(w_o)
 
 with tf.name_scope('b_o'):
     b_o = init_weights([1, w_o.get_shape().as_list()[1]], name='b_o', type='b')
     variable_summaries(b_o)
 
-weights = [conv1, conv2, conv3, w4, w_o]
-biases = [b1, b2, b3, b4, b_o]
+weights = [conv1, conv2, conv3, conv4, w5, w_o]
+biases = [b1, b2, b3, b4, b5, b_o]
 
 p_keep_conv = tf.placeholder("float")
 p_keep_hidden = tf.placeholder("float")
@@ -224,28 +237,28 @@ sess = tf.Session()
 
 merged = tf.summary.merge_all()
 train_writer = tf.summary.FileWriter('./logs/train', sess.graph)
-test_writer = tf.summary.FileWriter('./logs/test')
+# test_writer = tf.summary.FileWriter('./logs/test')
 tf.global_variables_initializer().run(session=sess)
 
 # init = tf.initialize_all_variables()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-# i = 4
-# saver.restore(sess,"my-model-cifar10-batchNormalized"+str(i))
-i = 0
+i = 59
+saver.restore(sess,"my-model-cifar10-batchNormalized"+str(59))
 
-for i in range(i, 60):
+for i in range(i, 100):
 
     imgList = []
     labelList = []
     batchID = 0
+    avgAccuracy = []
     for eachIteration in range(dataTrainArray.shape[0]):
 
         imgList.append(dataTrainArray[eachIteration,:,:,:])
         labelList.append(labelTrainArray[eachIteration,:])
 
-        if(len(imgList) == 16):
+        if(len(imgList) == 32):
             imgList = np.array(imgList)
             # feature scaling
             imgList = (imgList - imgList.mean())/imgList.std() # obtained from training dataset or cur image
@@ -254,7 +267,7 @@ for i in range(i, 60):
             # print(imgList.dtype)
             
             sess.run(train_op, feed_dict={X: imgList, Y: labelList,
-                                      p_keep_conv: 0.8, p_keep_hidden: 0.5})
+                                      p_keep_conv: 0.5, p_keep_hidden: 0.5})
 
             transformedY = np.argmax(labelList, 1)
             # print(transformedY.shape)
@@ -268,18 +281,22 @@ for i in range(i, 60):
             run_metadata = tf.RunMetadata()
             if(batchID % 25 == 0):
                 # don't write summaries for every batch, it slows down the program
-                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 0.8, p_keep_hidden: 0.5}, options=run_options, run_metadata=run_metadata)
+                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=run_metadata)
                 train_writer.add_summary(summary, i)
+                avgAccuracy.append(acc)
 
             train_writer.add_summary(summary, batchID)
             if(batchID % 100 == 0):
                 # get the accuracy for the current batch once in a while
+
                 print('inputs:', imgList.shape, labelList.shape)
-                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 0.8, p_keep_hidden: 0.5}, options=run_options, run_metadata=run_metadata)
+                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=run_metadata)
                 #train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
                 train_writer.add_summary(summary, i)
                 labelList = np.argmax(labelList, axis= 1)
                 print ('epoch: ', i, 'batchID:', batchID, 'curCost: ',curCost, 'accuracy: ', 100.0 * np.mean(outputY == labelList))
+                print('avg accuracy: ', sum(avgAccuracy)/float(len(avgAccuracy)))
+                print('--')
 
             imgList = []
             labelList = []
