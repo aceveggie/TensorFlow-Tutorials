@@ -226,8 +226,8 @@ def readMyTFRecords(tfrecords_train_filename, tfrecords_test_filename):
 dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["..\\data\\cifar-10-batches-py\\data_batch_1", "..\\data\\cifar-10-batches-py\\data_batch_2"])
 print('(train mean, test std, test mean, test std) =',dataTrainArray.mean(), dataTrainArray.std(), dataTestArray.mean(), dataTestArray.std())
 
-tfrecords_train_filename = 'CIFAR10_Train.tfrecords'
-tfrecords_test_filename = 'CIFAR10_Test.tfrecords'
+tfrecords_train_filename = '..\\data\\cifar10-tfrecords\\CIFAR10_Train.tfrecords'
+tfrecords_test_filename = '..\\data\\cifar10-tfrecords\\CIFAR10_Test.tfrecords'
 
 writeMyTFRecords(dataTrainArray, labelTrainArray, dataTestArray, labelTestArray, tfrecords_train_filename, tfrecords_test_filename)
 readMyTFRecords(tfrecords_train_filename, tfrecords_test_filename)
