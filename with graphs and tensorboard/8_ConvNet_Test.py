@@ -4,7 +4,6 @@ import pickle
 import random
 import cv2
 
-
 def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
