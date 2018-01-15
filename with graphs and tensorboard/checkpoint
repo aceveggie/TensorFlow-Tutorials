@@ -1,6 +1,0 @@
-model_checkpoint_path: "my-model-cifar10-batchNormalized99"
-all_model_checkpoint_paths: "my-model-cifar10-batchNormalized95"
-all_model_checkpoint_paths: "my-model-cifar10-batchNormalized96"
-all_model_checkpoint_paths: "my-model-cifar10-batchNormalized97"
-all_model_checkpoint_paths: "my-model-cifar10-batchNormalized98"
-all_model_checkpoint_paths: "my-model-cifar10-batchNormalized99"

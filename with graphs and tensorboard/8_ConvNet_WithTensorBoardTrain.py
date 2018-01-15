@@ -4,6 +4,12 @@ import pickle
 import random
 import cv2
 
+# to project the data using PCA and TSNE
+from tensorflow.contrib.tensorboard.plugins import projector
+#https://www.tensorflow.org/programmers_guide/embedding
+#https://www.tensorflow.org/versions/r0.12/how_tos/embedding_viz/
+
+import spriteCreator
 
 def unpickle(file):
     with open(file, 'rb') as fo:
@@ -120,11 +126,16 @@ def model(X, weights, biases, p_keep_conv, p_keep_hidden):
 
     l5 = tf.nn.relu(tf.layers.batch_normalization(tf.matmul(l4, w5) + b5))
     l5 = tf.nn.dropout(l5, p_keep_hidden)
+    
 
     pyx = tf.matmul(l5, w_o) + b_o
-    return pyx
+    embeddingTensor = l5
+    return pyx, embeddingTensor
 
 dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["..\\data\\cifar-10-batches-py\\data_batch_1", "..\\data\\cifar-10-batches-py\\data_batch_2"])
+
+spriteCreator.readWriteSpriteImage(".\\logs\\train\\")
+spriteCreator.readWriteSpriteImage(".\\logs\\")
 
 print(dataTrainArray.mean(), dataTrainArray.std(), dataTestArray.mean(), dataTestArray.std())
 
@@ -212,7 +223,9 @@ biases = [b1, b2, b3, b4, b5, b_o]
 p_keep_conv = tf.placeholder("float")
 p_keep_hidden = tf.placeholder("float")
 
-py_x = model(X, weights, biases, p_keep_conv, p_keep_hidden)
+py_x, embeddingTensor = model(X, weights, biases, p_keep_conv, p_keep_hidden)
+
+embeddingTensor = tf.identity(embeddingTensor, name="embeddingTensor")
 
 with tf.name_scope('cross_entropy'):
     calculatedError = tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)
@@ -237,17 +250,11 @@ sess = tf.Session()
 
 merged = tf.summary.merge_all()
 train_writer = tf.summary.FileWriter('./logs/train', sess.graph)
-# test_writer = tf.summary.FileWriter('./logs/test')
-tf.global_variables_initializer().run(session=sess)
 
-# init = tf.initialize_all_variables()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-i = 59
-saver.restore(sess,"my-model-cifar10-batchNormalized"+str(59))
-
-for i in range(i, 100):
+for i in range(100):
 
     imgList = []
     labelList = []
@@ -278,22 +285,25 @@ for i in range(i, 100):
                                       p_keep_conv: 1, p_keep_hidden: 1.0})
 
             run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-            run_metadata = tf.RunMetadata()
+            
             if(batchID % 25 == 0):
                 # don't write summaries for every batch, it slows down the program
-                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=run_metadata)
+                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=tf.RunMetadata())
                 train_writer.add_summary(summary, i)
                 avgAccuracy.append(acc)
 
-            train_writer.add_summary(summary, batchID)
+                embeddedVector = sess.run([embeddingTensor] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=tf.RunMetadata())[0]
+                #print(embeddedVector.shape, embeddedVector.max(), embeddedVector.min(), embeddedVector.mean(), embeddedVector.std())
+                #exit()
+
             if(batchID % 100 == 0):
                 # get the accuracy for the current batch once in a while
 
                 print('inputs:', imgList.shape, labelList.shape)
-                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=run_metadata)
-                #train_writer.add_run_metadata(run_metadata, 'step%03d' % i)
+                summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=tf.RunMetadata())
                 train_writer.add_summary(summary, i)
                 labelList = np.argmax(labelList, axis= 1)
+                saver.save(sess, '.\\logs\\train\\model.ckpt',batchID)
                 print ('epoch: ', i, 'batchID:', batchID, 'curCost: ',curCost, 'accuracy: ', 100.0 * np.mean(outputY == labelList))
                 print('avg accuracy: ', sum(avgAccuracy)/float(len(avgAccuracy)))
                 print('--')
@@ -302,7 +312,5 @@ for i in range(i, 100):
             labelList = []
             batchID += 1
             continue
-    saver.save(sess, '.\\my-model-cifar10-batchNormalized'+str(i))
-
+    saver.save(sess, '.\\logs\\train\\model.ckpt',i)
 train_writer.close()
-
