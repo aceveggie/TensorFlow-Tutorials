@@ -3,6 +3,11 @@ import numpy as np
 import pickle
 import random
 import cv2
+import os
+import shutil
+
+if(os.path.exists('./logs/train/')):
+    shutil.rmtree('./logs/train/')
 
 # to project the data using PCA and TSNE
 from tensorflow.contrib.tensorboard.plugins import projector
@@ -225,7 +230,9 @@ p_keep_hidden = tf.placeholder("float")
 
 py_x, embeddingTensor = model(X, weights, biases, p_keep_conv, p_keep_hidden)
 
-embeddingTensor = tf.identity(embeddingTensor, name="embeddingTensor")
+#embeddingTensor = tf.identity(embeddingTensor, name="embeddingTensor")
+with tf.name_scope('embeddingTensor'):
+    variable_summaries(embeddingTensor)
 
 with tf.name_scope('cross_entropy'):
     calculatedError = tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)
@@ -292,10 +299,6 @@ for i in range(100):
                 train_writer.add_summary(summary, i)
                 avgAccuracy.append(acc)
 
-                embeddedVector = sess.run([embeddingTensor] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=tf.RunMetadata())[0]
-                #print(embeddedVector.shape, embeddedVector.max(), embeddedVector.min(), embeddedVector.mean(), embeddedVector.std())
-                #exit()
-
             if(batchID % 100 == 0):
                 # get the accuracy for the current batch once in a while
 
@@ -303,7 +306,7 @@ for i in range(100):
                 summary, acc = sess.run([merged, accuracy] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=tf.RunMetadata())
                 train_writer.add_summary(summary, i)
                 labelList = np.argmax(labelList, axis= 1)
-                saver.save(sess, '.\\logs\\train\\model.ckpt',batchID)
+                # saver.save(sess, '.\\logs\\train\\model.ckpt',i)
                 print ('epoch: ', i, 'batchID:', batchID, 'curCost: ',curCost, 'accuracy: ', 100.0 * np.mean(outputY == labelList))
                 print('avg accuracy: ', sum(avgAccuracy)/float(len(avgAccuracy)))
                 print('--')
@@ -313,4 +316,19 @@ for i in range(100):
             batchID += 1
             continue
     saver.save(sess, '.\\logs\\train\\model.ckpt',i)
+    # embeddedVector = sess.run([embeddingTensor] , feed_dict={ X: imgList, Y: labelList, p_keep_conv: 1.0, p_keep_hidden: 1.0}, options=run_options, run_metadata=tf.RunMetadata())[0]
+    # embeddingVariable = tf.Variable(embeddedVector,  name='Embedding_FC1')
+    # sess.run(embeddingVariable.initializer)
+
+    # config = projector.ProjectorConfig()
+    # embedding = config.embeddings.add()
+    # embedding.tensor_name = embeddingVariable.name
+    # #print(embeddedVector.shape, embeddedVector.max(), embeddedVector.min(), embeddedVector.mean(), embeddedVector.std())
+    # #exit()
+    # embedding.metadata_path = '.\\logs\\train\\metadata.tsv'
+    # embedding.sprite.image_path = '.\\logs\\train\\sprite.png'
+    # embedding.sprite.single_image_dim.extend([32, 32, 3])
+    # projector.visualize_embeddings(train_writer, config)
+    # embeddingSaver = tf.train.Saver([embeddingVariable])
+    # embeddingSaver.save(sess, '.\\logs\\train\\embeddingVariable.ckpt', i)
 train_writer.close()

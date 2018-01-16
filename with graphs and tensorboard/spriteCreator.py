@@ -93,16 +93,19 @@ def images_to_sprite(data):
     return data
 
 def readWriteSpriteImage(logDir):
+	if(os.path.exists(logDir) == False):
+		os.makedirs(logDir)
 	dataTrainArray, labelTrainArray, dataTestArray, labelTestArray = readCIFAR10(["..\\data\\cifar-10-batches-py\\data_batch_1", "..\\data\\cifar-10-batches-py\\data_batch_2"])
 	imgList = []
 	for eachImg in dataTrainArray:
 		imgList.append(eachImg)
-	print('individual image is of shape', imgList[0].shape)
+		#print('individual image is of shape', imgList[0].shape)
 	imgList = np.array(imgList)
 	spriteImg = images_to_sprite(imgList)
 	print('creating big sprite with shape',spriteImg.shape)
 	cv2.imwrite(logDir+"sprite.png", spriteImg)
 	fp = open(logDir+"metadata.tsv","w")
+	fp.write("Index"+"\t"+"Class"+"\n")
 	idd = 0
 	for each in labelTrainArray:
 		fp.write(str(idd)+"\t"+str(each)+'\n')
