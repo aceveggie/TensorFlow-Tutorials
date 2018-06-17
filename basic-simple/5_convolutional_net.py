@@ -59,6 +59,12 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 
+
+for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
+    trainX = trX[start:end]
+    trainY = trY[start:end]
+    
+
 for i in range(1000):
     for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
         sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end],
