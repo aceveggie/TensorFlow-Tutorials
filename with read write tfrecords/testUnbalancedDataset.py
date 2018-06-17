@@ -58,12 +58,12 @@ init = tf.global_variables_initializer()
 sess.run(init)
 saver = tf.train.Saver()
 
-saver.restore(sess, './UnbalancedMNIST.meta')
 
 batchSize = 8
 
 superMat = np.eye(2)
 
+saver.restore(sess, './UnbalancedMNIST_weighted.meta')
 tfrecords_train_filename = "mnistTrain.tfrecords"
 
 imgList = []
