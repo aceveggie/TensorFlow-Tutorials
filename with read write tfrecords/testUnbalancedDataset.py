@@ -58,7 +58,7 @@ init = tf.global_variables_initializer()
 sess.run(init)
 saver = tf.train.Saver()
 
-saver.restore(sess, './UnbalancedMNIST_weighted.meta')
+saver.restore(sess, './UnbalancedMNIST.meta')
 
 batchSize = 8
 
@@ -138,8 +138,8 @@ for eachRecord in trainRecordIterator:
             print(np.argmax(i[0], 0), np.argmax(i[1], 0))
             predictedLabel = np.argmax(i[0], 0)
             originalLabel = np.argmax(i[1], 0)
-            print("predicted: ", predictedLabel, 'original', originalLabel)
-            print('----')
+            #print("predicted: ", predictedLabel, 'original', originalLabel)
+            #print('----')
             total += 1
             if(originalLabel == 1):
                 totalPos += 1
